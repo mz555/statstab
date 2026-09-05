@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A searchable archive of Mircea Zloteanu's #statstab posts: statistics, research methods, data analysis, and useful open tabs.">
+  <meta name="theme-color" content="#263a50">
+  <title>#statstab — a searchable stats tab archive</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#archive">Skip to archive</a>
+
+  <header class="site-header">
+    <div class="shell">
+      <nav class="topbar" aria-label="Primary">
+        <a class="brand" href="./" aria-label="#statstab home">
+          <span class="mini-tab" aria-hidden="true">
+            <span class="mini-tab__dot"></span>
+            <span class="mini-tab__dot"></span>
+            <span class="mini-tab__dot"></span>
+            <span class="mini-tab__label">#</span>
+          </span>
+          <span>#statstab</span>
+        </a>
+        <a class="profile-link" href="https://bsky.app/profile/mzloteanu.bsky.social" target="_blank" rel="me noopener">
+          @mzloteanu.bsky.social ↗
+        </a>
+      </nav>
+
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Statistics · methods · open tabs</p>
+          <h1>A searchable archive of <span>#statstab</span>.</h1>
+          <p class="lede">
+            Papers, tools, arguments, tutorials and methodological curiosities I had open in a browser tab
+            and thought were worth sharing. Browse by year, search the archive, or follow a topic tag.
+          </p>
+        </div>
+
+        <div class="browser-mark" aria-hidden="true">
+          <div class="browser-mark__bar">
+            <span></span><span></span><span></span>
+            <div class="browser-mark__tab">#statstab <b>×</b></div>
+            <i>+</i>
+          </div>
+          <div class="browser-mark__body">
+            <div class="pixel-bars"><i></i><i></i><i></i><i></i></div>
+            <div>
+              <small>one tab at a time</small>
+              <strong>stats + tab</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell main-shell" id="archive">
+    <aside class="filters" aria-label="Archive filters">
+      <div class="filter-block">
+        <label for="search">Search</label>
+        <div class="search-wrap">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.15A7.5 7.5 0 1 1 4 11.5a7.5 7.5 0 0 1 15 0Z"/></svg>
+          <input id="search" type="search" placeholder="Title, thought, tag…" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="filter-block">
+        <div class="filter-heading">
+          <span>Year</span>
+          <button class="text-button" id="clearYear" type="button">clear</button>
+        </div>
+        <div id="yearFilters" class="year-list" aria-label="Filter by year"></div>
+      </div>
+
+      <div class="filter-block">
+        <div class="filter-heading">
+          <label for="tagSelect">Topic</label>
+          <button class="text-button" id="clearTag" type="button">clear</button>
+        </div>
+        <select id="tagSelect">
+          <option value="">All tags</option>
+        </select>
+      </div>
+
+      <div class="filter-block filter-about">
+        <span class="filter-label">About</span>
+        <p>
+          New posts are collected automatically from Bluesky. Click any hashtag on a card to see
+          other #statstab posts using the same tag.
+        </p>
+      </div>
+    </aside>
+
+    <section class="archive-column">
+      <div class="archive-toolbar">
+        <div>
+          <p class="eyebrow">Archive</p>
+          <h2 id="resultHeading">All #statstabs</h2>
+        </div>
+        <div class="archive-meta">
+          <strong id="resultCount">—</strong>
+          <span id="syncStatus">loading…</span>
+        </div>
+      </div>
+
+      <div id="activeFilters" class="active-filters" aria-live="polite"></div>
+      <div id="cards" class="card-grid" aria-live="polite"></div>
+
+      <div id="emptyState" class="empty-state" hidden>
+        <div class="empty-icon">#?</div>
+        <h3>No tabs match those filters.</h3>
+        <p>Try a different year, tag, or search term.</p>
+        <button id="resetFilters" class="button" type="button">Reset filters</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <p><strong>#statstab</strong> · curated by <a href="https://bsky.app/profile/mzloteanu.bsky.social" target="_blank" rel="noopener">Mircea Zloteanu</a></p>
+      <p>Static site · automatically refreshed from Bluesky · <a href="https://github.com/" target="_blank" rel="noopener">hostable on GitHub Pages</a></p>
+    </div>
+  </footer>
+
+  <template id="cardTemplate">
+    <article class="stat-card">
+      <div class="card-topline">
+        <span class="stat-number"></span>
+        <time class="stat-date"></time>
+      </div>
+      <h3 class="stat-title"></h3>
+      <div class="stat-text"></div>
+      <div class="tags" aria-label="Topics"></div>
+      <div class="card-footer">
+        <a class="resource-link" target="_blank" rel="noopener">Open resource ↗</a>
+        <a class="bsky-link" target="_blank" rel="noopener">View on Bluesky ↗</a>
+      </div>
+    </article>
+  </template>
+
+  <script src="assets/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+{
+  "source": "seed",
+  "handle": "mzloteanu.bsky.social",
+  "hashtag": "#statstab",
+  "generated_at": "2026-09-04T17:00:00Z",
+  "count": 5,
+  "posts": [
+    {
+      "number": 485,
+      "title": "Bayesian ANCOVA and the ATE",
+      "thoughts": "Still grappling with the implications of using the causal inference approach to randomized experiments. But it’s interesting.",
+      "text": "#statstab #485 Bayesian ANCOVA and the ATE\n\nThoughts: Still grappling with the implications of using the causal inference approach to randomized experiments. But it’s interesting.\n\n#ATE #causalinference #ancova #ANOVA #rstats #estimand #counterfactuals",
+      "created_at": "2026-02-13T12:00:00Z",
+      "year": 2026,
+      "tags": [
+        "ATE",
+        "causalinference",
+        "ancova",
+        "ANOVA",
+        "rstats",
+        "estimand",
+        "counterfactuals"
+      ],
+      "external_links": [
+        "https://solomonkurz.netlify.app/"
+      ],
+      "post_url": "https://bsky.app/profile/mzloteanu.bsky.social",
+      "author": {
+        "display_name": "Dr Mircea Zloteanu",
+        "handle": "mzloteanu.bsky.social",
+        "profile_url": "https://bsky.app/profile/mzloteanu.bsky.social"
+      },
+      "uri": "seed:485"
+    },
+    {
+      "number": 389,
+      "title": "Risk Ratio, odds ratio, risk difference: Which causal measure is easier to generalize?",
+      "thoughts": "Use this with #388 for better insight into risk, odds, probabilities, and more.",
+      "text": "#statstab #389 Risk Ratio, odds ratio, risk difference: Which causal measure is easier to generalize?",
+      "created_at": "2025-07-17T19:50:17.947Z",
+      "year": 2025,
+      "tags": [
+        "odds",
+        "oddsratios",
+        "riskratios",
+        "probability"
+      ],
+      "external_links": [
+        "https://arxiv.org/html/2303.16008v3"
+      ],
+      "post_url": "https://bsky.app/profile/mzloteanu.bsky.social/post/3lu6pctosjc2d",
+      "author": {
+        "display_name": "Dr Mircea Zloteanu",
+        "handle": "mzloteanu.bsky.social",
+        "profile_url": "https://bsky.app/profile/mzloteanu.bsky.social"
+      },
+      "uri": "seed:389"
+    },
+    {
+      "number": 302,
+      "title": "Do Quantitative and Qualitative Research Reflect two Distinct Cultures?",
+      "thoughts": "Not sold on the approach, but the conclusion seems plausible.",
+      "text": "#statstab #302 Do Quantitative and Qualitative Research Reflect two Distinct Cultures?",
+      "created_at": "2025-03-18T20:07:05.346Z",
+      "year": 2025,
+      "tags": [
+        "methodology",
+        "qualitative",
+        "quantitative"
+      ],
+      "external_links": [
+        "https://doi.org/10.1177/00491241221082597"
+      ],
+      "post_url": "https://bsky.app/profile/mzloteanu.bsky.social/post/3lkohtdp4mc2j",
+      "author": {
+        "display_name": "Dr Mircea Zloteanu",
+        "handle": "mzloteanu.bsky.social",
+        "profile_url": "https://bsky.app/profile/mzloteanu.bsky.social"
+      },
+      "uri": "seed:302"
+    },
+    {
+      "number": 178,
+      "title": "PsyTeachR",
+      "thoughts": "With term starting soon, here is a collection of free, open, and reproducible resources for teaching psych, methods, and open science.",
+      "text": "#statstab #178 PsyTeachR",
+      "created_at": "2024-09-11T11:04:34.938Z",
+      "year": 2024,
+      "tags": [
+        "openscience",
+        "education",
+        "psychology",
+        "eduTwitter",
+        "r"
+      ],
+      "external_links": [
+        "https://psyteachr.github.io/"
+      ],
+      "post_url": "https://bsky.app/profile/mzloteanu.bsky.social/post/3l3uruez7rh2v",
+      "author": {
+        "display_name": "Dr Mircea Zloteanu",
+        "handle": "mzloteanu.bsky.social",
+        "profile_url": "https://bsky.app/profile/mzloteanu.bsky.social"
+      },
+      "uri": "seed:178"
+    },
+    {
+      "number": 23,
+      "title": "A Guideline of Selecting and Reporting Intraclass Correlation Coefficients",
+      "thoughts": "Many ICCs exist. A good source for easy checking. ICC is pretty weird in Mixed Effects Models, so I don't use it often.",
+      "text": "#statstab #23 A Guideline of Selecting and Reporting Intraclass Correlation Coefficients",
+      "created_at": "2024-02-07T17:37:00.028Z",
+      "year": 2024,
+      "tags": [
+        "statistics",
+        "reliability",
+        "ICC"
+      ],
+      "external_links": [
+        "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4913118/"
+      ],
+      "post_url": "https://bsky.app/profile/mzloteanu.bsky.social/post/3kktsm7n7gk2a",
+      "author": {
+        "display_name": "Dr Mircea Zloteanu",
+        "handle": "mzloteanu.bsky.social",
+        "profile_url": "https://bsky.app/profile/mzloteanu.bsky.social"
+      },
+      "uri": "seed:23"
+    }
+  ]
+}
