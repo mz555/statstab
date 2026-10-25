@@ -173,14 +173,38 @@ def clusters(rows):
     return cs
 
 def canon(c):
-    c=sorted(c,key=lambda x:dt(x['created_at'])); first=c[0]; n=first['number']; issues=[]
-    if n is None: n=next((x['number'] for x in c if x['number'] is not None),None); issues.append('earliest_number_missing')
-    if len({x['number'] for x in c if x['number'] is not None})>1: issues.append('number_disagreement')
+    c=sorted(c,key=lambda x:dt(x['created_at'])); first=c[0]; issues=[]
+
+    # Mastodon is the authoritative numbering source because it is editable.
+    # X/Bluesky retain their historical numbers in Source details but do not
+    # override a corrected Mastodon number.
+    masto=[x for x in c if x['source']=='mastodon']
+    masto_with_num=[x for x in masto if x['number'] is not None]
+    if masto:
+        if masto_with_num:
+            n=masto_with_num[0]['number']
+            authority='mastodon'
+            if len({x['number'] for x in masto_with_num})>1:
+                issues.append('mastodon_number_disagreement')
+        else:
+            n=next((x['number'] for x in c if x['number'] is not None),None)
+            authority='fallback_earliest'
+            issues.append('mastodon_number_missing')
+    else:
+        n=next((x['number'] for x in c if x['number'] is not None),None)
+        authority='fallback_earliest'
+        fallback_nums={x['number'] for x in c if x['number'] is not None}
+        if n is None:
+            issues.append('number_missing')
+        elif len(fallback_nums)>1:
+            issues.append('fallback_number_disagreement')
+
     rich=max(c,key=lambda x:len(norm((x['body'] or '')+' '+(x['title'] or ''))))
     src={}
     for x in c: src.setdefault(x['source'],[]).append({'source_id':x['source_id'],'url':x['url'],'created_at':x['created_at'],'number':x['number'],'text':x['text']})
     return {'canonical_id':hashlib.sha1('|'.join(sorted(x['source']+':'+x['source_id'] for x in c)).encode()).hexdigest()[:14],
-            'display_number':n,'number_issue':bool(issues),'number_issues':issues,'first_published':first['created_at'],'year':dt(first['created_at']).year,
+            'display_number':n,'number_authority':authority,'number_issue':bool(issues),'number_issues':issues,
+            'first_published':first['created_at'],'year':dt(first['created_at']).year,
             'title':rich['title'] or first['title'] or '#statstab','body':rich['body'] or '','display_source':rich['source'],
             'tags':uniq(sorted([t for x in c for t in x['tags']],key=str.casefold),key=str.casefold),
             'external_links':uniq([u for x in c for u in x['external_links']],key=str.casefold),'sources':src}
