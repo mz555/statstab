@@ -1,4 +1,5 @@
 const state = { posts: [], query: "", year: "", tag: "" };
+const SOURCE_LABELS = { x: "X", bluesky: "Bluesky", mastodon: "Mastodon" };
 
 const $ = (sel) => document.querySelector(sel);
 const cardsEl = $("#cards");
@@ -11,9 +12,10 @@ const resultHeading = $("#resultHeading");
 const syncStatus = $("#syncStatus");
 const activeFilters = $("#activeFilters");
 const emptyState = $("#emptyState");
+const numberFootnote = $("#numberFootnote");
 
 const escapeHTML = (s = "") =>
-  s.replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+  String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 
 function formatDate(iso) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -22,7 +24,7 @@ function formatDate(iso) {
 }
 
 function normalizeTag(tag) {
-  return tag.replace(/^#/, "").toLowerCase();
+  return String(tag || "").replace(/^#/, "").toLowerCase();
 }
 
 function linkify(text = "") {
@@ -30,10 +32,6 @@ function linkify(text = "") {
   safe = safe.replace(
     /(https?:\/\/[^\s<]+)/g,
     '<a href="$1" target="_blank" rel="noopener">$1</a>'
-  );
-  safe = safe.replace(
-    /(^|[\s(])#([\p{L}\p{N}_-]+)/gu,
-    (_, lead, tag) => `${lead}<a href="?tag=${encodeURIComponent(tag)}" class="inline-tag" data-tag="${escapeHTML(tag)}">#${escapeHTML(tag)}</a>`
   );
   return safe;
 }
@@ -57,11 +55,14 @@ function populateControls() {
   });
 
   const tagCounts = new Map();
-  state.posts.forEach(post => post.tags.forEach(tag => {
+  state.posts.forEach(post => (post.tags || []).forEach(tag => {
     const key = normalizeTag(tag);
     tagCounts.set(key, (tagCounts.get(key) || 0) + 1);
   }));
-  const tags = [...tagCounts.entries()].sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+  const tags = [...tagCounts.entries()].sort((a,b) =>
+    a[0].localeCompare(b[0], undefined, { sensitivity: "base" })
+  );
 
   tagSelect.innerHTML = '<option value="">All tags</option>';
   tags.forEach(([tag, count]) => {
@@ -76,36 +77,39 @@ function filteredPosts() {
   const q = state.query.trim().toLowerCase();
   return state.posts.filter(post => {
     if (state.year && String(post.year) !== state.year) return false;
-    if (state.tag && !post.tags.some(t => normalizeTag(t) === state.tag)) return false;
+    if (state.tag && !(post.tags || []).some(t => normalizeTag(t) === state.tag)) return false;
     if (!q) return true;
+    const sourceText = Object.values(post.sources || {}).flat().map(s => s.text || "").join(" ");
     const haystack = [
-      post.number, post.title, post.text, post.thoughts,
-      ...(post.tags || [])
+      post.display_number, post.title, post.body, sourceText, ...(post.tags || [])
     ].join(" ").toLowerCase();
     return haystack.includes(q);
   });
 }
 
+function sourceRows(post) {
+  const rows = [];
+  ["x", "bluesky", "mastodon"].forEach(source => {
+    const items = post.sources?.[source] || [];
+    items.forEach(item => rows.push({ source, ...item }));
+  });
+  rows.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  return rows;
+}
+
 function renderCard(post) {
   const frag = template.content.cloneNode(true);
-  const card = frag.querySelector(".stat-card");
-  frag.querySelector(".stat-number").textContent = post.number ? `#${post.number}` : "#statstab";
+
+  const suffix = post.number_issue ? "*" : "";
+  const numberText = post.display_number != null ? `#${post.display_number}${suffix}` : `#?${suffix || "*"}`;
+  frag.querySelector(".stat-number").textContent = numberText;
+
   const time = frag.querySelector(".stat-date");
-  time.textContent = formatDate(post.created_at);
-  time.dateTime = post.created_at;
+  time.textContent = formatDate(post.first_published);
+  time.dateTime = post.first_published;
+
   frag.querySelector(".stat-title").textContent = post.title || "#statstab";
-
-  const bodyText = post.thoughts || post.body || post.text || "";
-  const body = frag.querySelector(".stat-text");
-  body.innerHTML = linkify(bodyText.replace(/^\s*Thoughts:\s*/i, ""));
-
-  body.addEventListener("click", (e) => {
-    const a = e.target.closest("[data-tag]");
-    if (!a) return;
-    e.preventDefault();
-    state.tag = normalizeTag(a.dataset.tag);
-    syncUI();
-  });
+  frag.querySelector(".stat-text").innerHTML = linkify(post.body || "");
 
   const tags = frag.querySelector(".tags");
   (post.tags || []).forEach(tag => {
@@ -120,18 +124,44 @@ function renderCard(post) {
     tags.appendChild(b);
   });
 
-  const resource = frag.querySelector(".resource-link");
-  if (post.external_links?.length) {
-    resource.href = post.external_links[0];
-  } else {
-    resource.remove();
+  const resourceRow = frag.querySelector(".resource-row");
+  (post.external_links || []).slice(0, 3).forEach((url, i) => {
+    const a = document.createElement("a");
+    a.className = "resource-link";
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = i === 0 ? "Open resource ↗" : `Resource ${i + 1} ↗`;
+    resourceRow.appendChild(a);
+  });
+  if (!resourceRow.children.length) resourceRow.remove();
+
+  const sourceLinks = frag.querySelector(".source-links");
+  ["x", "bluesky", "mastodon"].forEach(source => {
+    const items = post.sources?.[source] || [];
+    if (!items.length) return;
+    const a = document.createElement("a");
+    a.className = `source-link source-${source}`;
+    a.href = items[0].url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = SOURCE_LABELS[source];
+    sourceLinks.appendChild(a);
+  });
+
+  const detailList = frag.querySelector(".source-detail-list");
+  sourceRows(post).forEach(item => {
+    const row = document.createElement("div");
+    row.className = "source-detail";
+    const historicalNumber = item.number != null ? ` · #${item.number}` : " · no number detected";
+    row.innerHTML = `<b>${escapeHTML(SOURCE_LABELS[item.source])}</b><span>${escapeHTML(formatDate(item.created_at))}${escapeHTML(historicalNumber)}</span>`;
+    detailList.appendChild(row);
+  });
+
+  if (!post.number_issue && sourceRows(post).length <= 1) {
+    frag.querySelector(".source-details").remove();
   }
 
-  const bsky = frag.querySelector(".bsky-link");
-  bsky.href = post.post_url;
-  bsky.setAttribute("aria-label", `View statstab ${post.number || ""} on Bluesky`);
-
-  card.dataset.year = post.year;
   return frag;
 }
 
@@ -145,7 +175,7 @@ function renderActiveFilters() {
   chips.forEach(([kind, label]) => {
     const chip = document.createElement("span");
     chip.className = "active-chip";
-    chip.innerHTML = `<span>${escapeHTML(label)}</span><button type="button" aria-label="Remove ${kind} filter">×</button>`;
+    chip.innerHTML = `<span>${escapeHTML(label)}</span><button type="button">×</button>`;
     chip.querySelector("button").addEventListener("click", () => {
       if (kind === "year") state.year = "";
       if (kind === "tag") state.tag = "";
@@ -167,7 +197,9 @@ function updateURL() {
 function syncUI() {
   searchEl.value = state.query;
   tagSelect.value = state.tag;
-  document.querySelectorAll(".year-button").forEach(b => b.classList.toggle("active", b.dataset.year === state.year));
+  document.querySelectorAll(".year-button").forEach(
+    b => b.classList.toggle("active", b.dataset.year === state.year)
+  );
 
   const posts = filteredPosts();
   cardsEl.innerHTML = "";
@@ -181,6 +213,7 @@ function syncUI() {
       : "All #statstabs";
 
   emptyState.hidden = posts.length !== 0;
+  numberFootnote.hidden = !state.posts.some(p => p.number_issue);
   renderActiveFilters();
   updateURL();
 }
@@ -197,8 +230,8 @@ async function init() {
     const data = await res.json();
 
     state.posts = (data.posts || []).sort((a,b) =>
-      (Number(b.number) || 0) - (Number(a.number) || 0) ||
-      new Date(b.created_at) - new Date(a.created_at)
+      new Date(b.first_published) - new Date(a.first_published) ||
+      (Number(b.display_number) || 0) - (Number(a.display_number) || 0)
     );
 
     const params = new URLSearchParams(location.search);
@@ -207,14 +240,17 @@ async function init() {
     state.query = params.get("q") || "";
 
     populateControls();
+    const parts = [];
+    if (data.source_counts?.x) parts.push(`${data.source_counts.x} X`);
+    if (data.source_counts?.bluesky) parts.push(`${data.source_counts.bluesky} Bluesky`);
+    if (data.source_counts?.mastodon) parts.push(`${data.source_counts.mastodon} Mastodon`);
     syncStatus.textContent = data.generated_at
-      ? `synced ${formatDate(data.generated_at)}`
+      ? `synced ${formatDate(data.generated_at)}${parts.length ? ` · ${parts.join(" · ")}` : ""}`
       : "archive loaded";
     syncUI();
   } catch (err) {
     console.error(err);
     syncStatus.textContent = "could not load archive";
-    cardsEl.innerHTML = `<div class="empty-state"><h3>Archive unavailable</h3><p>The data file could not be loaded.</p></div>`;
   }
 }
 

@@ -1,75 +1,73 @@
-# #statstab archive
+# #statstab — multi-source archive
 
-A small, static, searchable website for Mircea Zloteanu's **#statstab** posts.
+A static, searchable GitHub Pages archive of Mircea Zloteanu's **#statstab** posts.
 
-It is designed for free hosting on **GitHub Pages**. A GitHub Actions workflow
-refreshes the archive from Bluesky twice per hour and deploys the updated site.
+## Version 2: three sources
 
-## What it does
+The archive now combines:
 
-- reads `@mzloteanu.bsky.social` using Bluesky's public author-feed API;
-- keeps only Mircea's own posts containing `#statstab`;
-- extracts the `#statstab` sequence number;
-- extracts all other hashtags as searchable/clickable topic tags;
-- extracts the post year for year browsing;
-- links each card back to the original Bluesky post;
-- picks up outbound article/resource links from Bluesky facets/embeds;
-- supports full-text search, year filters and tag filters;
-- stores no passwords, API tokens, cookies or analytics.
+- **X** — one-time historical import from your personal X archive;
+- **Bluesky** — refreshed automatically from the public author feed;
+- **Mastodon** — refreshed automatically from the public ActivityPub outbox.
 
-## Deploy on GitHub Pages
+A canonical #statstab card can therefore show links to **X, Bluesky and Mastodon**
+when matching versions exist.
 
-1. Create a new GitHub repository, for example `statstab`.
-2. Upload the **contents of this folder** to the repository root.
-3. Commit/push them to the `main` branch.
-4. On GitHub, open **Settings → Pages**.
-5. Under **Build and deployment → Source**, choose **GitHub Actions**.
-6. Open the **Actions** tab. The workflow named **Refresh #statstab and deploy**
-   should run after the push.
-7. When it finishes, GitHub will show the Pages URL.
+## Important historical-matching rules
 
-For a repository called `statstab`, the usual URL is:
+Sequence number is **not** used as the unique identifier.
 
-`https://YOUR-GITHUB-USERNAME.github.io/statstab/`
+The merger cross-checks:
 
-The updater also runs at minutes 17 and 47 of every hour. GitHub scheduled jobs are not
-guaranteed to start at the exact minute, so a new #statstab can take a little
-while to appear.
+1. external resource URL;
+2. title/text similarity;
+3. publication-date proximity;
+4. number agreement;
+5. hashtag overlap.
 
-## Run locally
+The visible number is the **number on the earliest observed post**.
 
-The site itself needs only a tiny local web server:
+Chronological ordering and year browsing use the **earliest observed publication
+date**, not the sequence number.
 
-```bash
-python -m http.server 8000
-```
+If numbering differs across platforms, a number is reused for distinct entries,
+or the earliest post has no detectable number, the card shows an asterisk (`*`).
+Historical posts are never silently renumbered.
 
-Then open `http://localhost:8000`.
+Where the X/Bluesky/Mastodon versions differ, the card displays the
+**longest/richest version** and takes the **alphabetical union of hashtags**
+across all matching versions.
 
-To refresh the data first:
+## First: import the X history safely
+
+Do **not** put your full X archive in a public GitHub repository. An account
+archive can contain much more private/account information than the tweets needed
+for this website.
+
+Run the included importer **locally**:
 
 ```bash
-python scripts/fetch_statstabs.py
-python -m http.server 8000
+python scripts/import_x_archive.py "/path/to/twitter-archive.zip"
 ```
 
-No third-party Python packages are required.
+It creates:
 
-## Change the Bluesky account or hashtag
-
-Edit `.github/workflows/deploy.yml`:
-
-```yaml
-env:
-  BSKY_HANDLE: mzloteanu.bsky.social
-  STATSTAB_HASHTAG: statstab
-  STATSTAB_START_DATE: "2024-01-01"
+```text
+data/x_statstabs.json
 ```
 
-The same values can be supplied as environment variables when running the
-fetcher manually.
+That JSON contains only tweets detected as `#statstab`, plus their dates, public
+URLs, hashtags and external links. Review it if you wish. Commit **that JSON
+file only**.
 
-## Site structure
+The importer also accepts an extracted archive folder or `tweets.js` directly.
+
+If you prefer, you can provide your X archive to ChatGPT in this conversation
+and have the sanitized JSON generated for you instead.
+
+## Deploy/update your existing GitHub Pages repository
+
+Replace/add these files in the repository:
 
 ```text
 .
@@ -78,22 +76,72 @@ fetcher manually.
 │   ├── app.js
 │   ├── favicon.svg
 │   └── styles.css
-├── data/statstabs.json
-├── scripts/fetch_statstabs.py
+├── data/
+│   ├── statstabs.json
+│   └── x_statstabs.json
+├── scripts/
+│   ├── build_archive.py
+│   └── import_x_archive.py
 ├── .nojekyll
 ├── index.html
 └── README.md
 ```
 
-`data/statstabs.json` contains a few seed entries so the design can be previewed
-before the first live refresh. The first GitHub Actions deployment replaces that
-file with the complete Bluesky-derived archive.
+Then:
 
-## Notes
+1. commit/push to `main`;
+2. in GitHub **Settings → Pages**, use **GitHub Actions** as the source;
+3. run **Actions → Refresh #statstab and deploy → Run workflow** once.
 
-Bluesky is used rather than X because public author-feed reads can be performed
-without an API key. This makes the site practical to keep entirely static and
-free to host.
+The workflow subsequently refreshes live Bluesky and Mastodon data four times a
+day. X remains the sanitized historical snapshot unless you run the local X
+importer again using a newer archive.
 
-If you later want Mastodon as a fallback source, the fetcher can be extended
-without changing the front end.
+## Why Mastodon does not need a token
+
+The updater reads your public **ActivityPub outbox**, rather than logging into
+Mastodon. This gives the site access to public posts and their richer Mastodon
+hashtags without storing credentials.
+
+## Topic filter
+
+The tag dropdown and card hashtags are deliberately **alphabetical**. Counts are
+still shown in the dropdown, but frequency no longer controls ordering.
+
+## Source details
+
+A card links to each platform on which a matching version was found. When there
+is more than one source—or a numbering issue—the **Source details** disclosure
+also shows the individual publication dates and historical number detected on
+each platform.
+
+## Colour
+
+The top banner is based on:
+
+```text
+#1e293b
+```
+
+## Local preview
+
+After you have `data/statstabs.json`:
+
+```bash
+python -m http.server 8000
+```
+
+Open `http://localhost:8000`.
+
+To build the live merged archive locally you need internet access:
+
+```bash
+python scripts/build_archive.py
+python -m http.server 8000
+```
+
+## Files generated by the live build
+
+`data/statstabs.json` is the derived canonical archive used by the browser.
+The GitHub Action rebuilds it for each Pages deployment. `data/x_statstabs.json`
+is the small, sanitized historical input that you commit to the repository.

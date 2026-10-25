@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A searchable archive of Mircea Zloteanu's #statstab posts: statistics, research methods, data analysis, and useful open tabs.">
-  <meta name="theme-color" content="#263a50">
+  <meta name="description" content="A searchable multi-source archive of Mircea Zloteanu's #statstab posts.">
+  <meta name="theme-color" content="#1e293b">
   <title>#statstab — a searchable stats tab archive</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/styles.css">
@@ -24,9 +24,11 @@
           </span>
           <span>#statstab</span>
         </a>
-        <a class="profile-link" href="https://bsky.app/profile/mzloteanu.bsky.social" target="_blank" rel="me noopener">
-          @mzloteanu.bsky.social ↗
-        </a>
+        <div class="top-sources" aria-label="Source profiles">
+          <a href="https://x.com/mzloteanu" target="_blank" rel="me noopener">X</a>
+          <a href="https://bsky.app/profile/mzloteanu.bsky.social" target="_blank" rel="me noopener">Bluesky</a>
+          <a href="https://mastodon.social/@mzloteanu" target="_blank" rel="me noopener">Mastodon</a>
+        </div>
       </nav>
 
       <div class="hero">
@@ -35,7 +37,7 @@
           <h1>A searchable archive of <span>#statstab</span>.</h1>
           <p class="lede">
             Papers, tools, arguments, tutorials and methodological curiosities I had open in a browser tab
-            and thought were worth sharing. Browse by year, search the archive, or follow a topic tag.
+            and thought were worth sharing. Collected across X, Bluesky and Mastodon.
           </p>
         </div>
 
@@ -88,8 +90,8 @@
       <div class="filter-block filter-about">
         <span class="filter-label">About</span>
         <p>
-          New posts are collected automatically from Bluesky. Click any hashtag on a card to see
-          other #statstab posts using the same tag.
+          X provides the historical archive. Bluesky and Mastodon are refreshed automatically.
+          Hashtags are combined across versions of the same #statstab.
         </p>
       </div>
     </aside>
@@ -115,13 +117,20 @@
         <p>Try a different year, tag, or search term.</p>
         <button id="resetFilters" class="button" type="button">Reset filters</button>
       </div>
+
+      <p class="number-footnote" id="numberFootnote">
+        <strong>* Numbering note.</strong> An asterisk marks an entry where the historical numbering needs
+        qualification—for example, the number differs between platforms, the same number was used for more than
+        one distinct #statstab, or the earliest version did not provide an unambiguous number. Historical numbers
+        are preserved and are never silently renumbered.
+      </p>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="shell footer-inner">
-      <p><strong>#statstab</strong> · curated by <a href="https://bsky.app/profile/mzloteanu.bsky.social" target="_blank" rel="noopener">Mircea Zloteanu</a></p>
-      <p>Static site · automatically refreshed from Bluesky · <a href="https://github.com/" target="_blank" rel="noopener">hostable on GitHub Pages</a></p>
+      <p><strong>#statstab</strong> · curated by Mircea Zloteanu</p>
+      <p>Historical X archive + live Bluesky/Mastodon · static GitHub Pages site</p>
     </div>
   </footer>
 
@@ -134,10 +143,18 @@
       <h3 class="stat-title"></h3>
       <div class="stat-text"></div>
       <div class="tags" aria-label="Topics"></div>
+
+      <div class="resource-row"></div>
+
       <div class="card-footer">
-        <a class="resource-link" target="_blank" rel="noopener">Open resource ↗</a>
-        <a class="bsky-link" target="_blank" rel="noopener">View on Bluesky ↗</a>
+        <span class="posted-label">Posted on</span>
+        <div class="source-links"></div>
       </div>
+
+      <details class="source-details">
+        <summary>Source details</summary>
+        <div class="source-detail-list"></div>
+      </details>
     </article>
   </template>
 
