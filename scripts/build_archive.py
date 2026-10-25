@@ -137,7 +137,7 @@ def mastodon():
             created=o.get('created_at')
             if created: oldest=min(oldest,dt(created)) if oldest else dt(created)
             h=HTML(); h.feed(o.get('content','')); text,links=h.result()
-            if not created or not STAT.search(text): continue
+            if not created or not STAT.search(text[:80]): continue
             xt=[t.get('name','') for t in o.get('tags',[]) or [] if t.get('name')]
             u=o.get('url') or o.get('uri') or ''
             card=o.get('card') or {}
