@@ -103,7 +103,7 @@ def bluesky():
             p=e.get('post',{}); a=p.get('author',{}); r=p.get('record',{}); text=r.get('text','')
             created=r.get('createdAt') or p.get('indexedAt')
             if created: oldest=min(oldest,dt(created)) if oldest else dt(created)
-            if not created or a.get('handle','').casefold()!=BSKY.casefold() or not STAT.search(text): continue
+            if not created or a.get('handle','').casefold()!=BSKY.casefold() or not STAT.search(text[:80]): continue
             links=[]
             for f in r.get('facets',[]) or []:
                 for x in f.get('features',[]) or []:
@@ -119,25 +119,34 @@ def bluesky():
     return out
 
 def mastodon():
-    accept='application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
-    actor=get(MASTO,accept); first=get(actor['outbox'],accept).get('first'); out=[]
-    page=first if isinstance(first,dict) and first.get('orderedItems') else None
-    nxt=None if page else (first.get('id') if isinstance(first,dict) else first)
-    while page is not None or nxt:
-        if page is None: page=get(nxt,accept)
+    parsed=urllib.parse.urlsplit(MASTO)
+    base=f'{parsed.scheme}://{parsed.netloc}'
+    username=parsed.path.rstrip('/').split('/')[-1]
+    q=urllib.parse.urlencode({'q':username,'type':'accounts','limit':10})
+    found=get(base+'/api/v2/search?'+q).get('accounts',[])
+    account=next((a for a in found if (a.get('username') or '').casefold()==username.casefold()),None)
+    if not account: raise RuntimeError(f'Mastodon account not found via public API: {username}')
+    account_id=account['id']; out=[]; max_id=None
+    while True:
+        params={'limit':40,'exclude_reblogs':'true'}
+        if max_id: params['max_id']=max_id
+        page=get(base+f'/api/v1/accounts/{account_id}/statuses?'+urllib.parse.urlencode(params))
+        if not page: break
         oldest=None
-        for a in page.get('orderedItems',[]) or []:
-            if a.get('type')!='Create' or not isinstance(a.get('object'),dict): continue
-            o=a['object']; created=o.get('published') or a.get('published')
+        for o in page:
+            created=o.get('created_at')
             if created: oldest=min(oldest,dt(created)) if oldest else dt(created)
             h=HTML(); h.feed(o.get('content','')); text,links=h.result()
             if not created or not STAT.search(text): continue
-            xt=[(t.get('name') or '').lstrip('#') for t in o.get('tag',[]) or [] if isinstance(t,dict) and t.get('type')=='Hashtag']
-            u=o.get('url') or o.get('id','')
-            if isinstance(u,list): u=next((x.get('href') for x in u if isinstance(x,dict) and x.get('href')),o.get('id',''))
+            xt=[t.get('name','') for t in o.get('tags',[]) or [] if t.get('name')]
+            u=o.get('url') or o.get('uri') or ''
+            card=o.get('card') or {}
+            if card.get('url'): links.append(card['url'])
             out.append(record('mastodon',o.get('id') or u,u,created,text,links+URL.findall(text),xt))
-        n=page.get('next'); nxt=n.get('id') if isinstance(n,dict) else n; page=None
-        if not nxt or (oldest and oldest<START): break
+        if oldest and oldest<START: break
+        last_id=page[-1].get('id')
+        if not last_id or last_id==max_id: break
+        max_id=last_id
         time.sleep(.1)
     return out
 
@@ -149,7 +158,7 @@ def match(a,b):
     if days>30: return False
     ts=sim(a['title'],b['title']); same=a['number'] is not None and a['number']==b['number']
     if overlap(a,b) and (days<=21 or ts>=.58): return True
-    if days<=14 and (ts>=.84 or sim(a['text'],b['text'])>=.80): return True
+    if days<=0.5 and (ts>=.84 or sim(a['text'],b['text'])>=.80): return True
     if same and days<=7 and ts>=.52: return True
     ta={x.casefold() for x in a['tags']}; tb={x.casefold() for x in b['tags']}; j=len(ta&tb)/len(ta|tb) if ta|tb else 0
     return same and days<=3 and j>=.35
