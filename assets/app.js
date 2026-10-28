@@ -111,6 +111,16 @@ function renderCard(post) {
   frag.querySelector(".stat-title").textContent = post.title || "#statstab";
   frag.querySelector(".stat-text").innerHTML = linkify(post.body || "");
 
+  if (post.title_duplicate && (post.previously_shared || []).length) {
+    const previous = post.previously_shared
+      .map(item => item.display_number != null ? `#${item.display_number}` : "an earlier post")
+      .join(", ");
+    const note = document.createElement("p");
+    note.className = "duplicate-note";
+    note.textContent = `Previously shared as ${previous}`;
+    frag.querySelector(".stat-title").insertAdjacentElement("afterend", note);
+  }
+
   const tags = frag.querySelector(".tags");
   (post.tags || []).forEach(tag => {
     const b = document.createElement("button");
