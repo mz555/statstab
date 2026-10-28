@@ -8,7 +8,7 @@ The archive now combines:
 
 - **X** — one-time historical import from your personal X archive;
 - **Bluesky** — refreshed automatically from the public author feed;
-- **Mastodon** — refreshed automatically from the public ActivityPub outbox.
+- **Mastodon** — refreshed automatically from Mastodon’s public account/status API.
 
 A canonical #statstab card can therefore show links to **X, Bluesky and Mastodon**
 when matching versions exist.
@@ -25,13 +25,13 @@ The merger cross-checks:
 4. number agreement;
 5. hashtag overlap.
 
-The visible number is the **number on the earliest observed post**.
+The visible number is taken from **Mastodon when a Mastodon version exists**. Mastodon is the authoritative numbering source because those historical posts can be corrected. If no Mastodon version exists, the archive falls back to the earliest available numbered source.
 
 Chronological ordering and year browsing use the **earliest observed publication
 date**, not the sequence number.
 
 If numbering differs across platforms, a number is reused for distinct entries,
-or the earliest post has no detectable number, the card shows an asterisk (`*`).
+or the authoritative source has no detectable number, the card shows an asterisk (`*`).
 Historical posts are never silently renumbered.
 
 Where the X/Bluesky/Mastodon versions differ, the card displays the
@@ -93,15 +93,12 @@ Then:
 2. in GitHub **Settings → Pages**, use **GitHub Actions** as the source;
 3. run **Actions → Refresh #statstab and deploy → Run workflow** once.
 
-The workflow subsequently refreshes live Bluesky and Mastodon data four times a
-day. X remains the sanitized historical snapshot unless you run the local X
+The workflow subsequently refreshes live Bluesky and Mastodon data every two hours. X remains the sanitized historical snapshot unless you run the local X
 importer again using a newer archive.
 
 ## Why Mastodon does not need a token
 
-The updater reads your public **ActivityPub outbox**, rather than logging into
-Mastodon. This gives the site access to public posts and their richer Mastodon
-hashtags without storing credentials.
+The updater reads Mastodon’s public account/status endpoints rather than logging in. This gives the site access to public posts and their richer Mastodon hashtags without storing credentials.
 
 ## Topic filter
 
