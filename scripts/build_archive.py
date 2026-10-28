@@ -66,6 +66,54 @@ def title_body(text):
     body=URL.sub('',body); body=TAG.sub('',body); body=re.sub(r'\s+',' ',body).strip(' -–—')
     return title,body
 
+
+def title_key(title):
+    """Normalise a tab title for conservative duplicate detection."""
+    s=unicodedata.normalize('NFKC', title or '').casefold()
+    s=re.sub(r'[\W_]+',' ',s,flags=re.UNICODE)
+    return re.sub(r'\s+',' ',s).strip()
+
+def mark_title_duplicates(posts):
+    """Mark later canonical posts whose normalised title was already shared."""
+    ordered=sorted(posts,key=lambda p:(dt(p['first_published']),p.get('display_number') or -1))
+    seen={}
+    report=[]
+    for p in ordered:
+        key=title_key(p.get('title',''))
+        p['title_duplicate']=False
+        p['previously_shared']=[]
+
+        # Very short/generic titles are too noisy to auto-flag.
+        if len(key)<5:
+            continue
+
+        prior=seen.get(key,[])
+        if prior:
+            p['title_duplicate']=True
+            p['previously_shared']=[
+                {
+                    'display_number':q.get('display_number'),
+                    'canonical_id':q.get('canonical_id'),
+                    'first_published':q.get('first_published'),
+                    'title':q.get('title')
+                }
+                for q in prior
+            ]
+            report.append({
+                'display_number':p.get('display_number'),
+                'title':p.get('title'),
+                'first_published':p.get('first_published'),
+                'canonical_id':p.get('canonical_id'),
+                'previously_shared_numbers':[q.get('display_number') for q in prior],
+                'previously_shared_dates':[q.get('first_published') for q in prior],
+                'source_urls':{
+                    source:[item.get('url') for item in items if item.get('url')]
+                    for source,items in (p.get('sources') or {}).items()
+                }
+            })
+        seen.setdefault(key,[]).append(p)
+    return report
+
 def record(source,sid,url,created,text,links=(),extra_tags=()):
     ti,bo=title_body(text)
     return {'source':source,'source_id':str(sid),'url':url,'created_at':created,'number':number(text),
@@ -221,9 +269,32 @@ def main():
     for group in by.values():
         if len(group)>1:
             for p in group: p['number_issue']=True; p['number_issues'].append('number_reused')
+
+    duplicate_report=mark_title_duplicates(posts)
+
     posts.sort(key=lambda p:(dt(p['first_published']),p['display_number'] or -1),reverse=True)
-    payload={'generated_at':iso(datetime.now(timezone.utc)),'hashtag':'#statstab','source_counts':{k:len(v) for k,v in parts.items()},'canonical_count':len(posts),'posts':posts}
-    OUT.parent.mkdir(parents=True,exist_ok=True); OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding='utf-8')
-    print(json.dumps({'source_counts':payload['source_counts'],'canonical_count':len(posts)}))
+    payload={
+        'generated_at':iso(datetime.now(timezone.utc)),
+        'hashtag':'#statstab',
+        'source_counts':{k:len(v) for k,v in parts.items()},
+        'canonical_count':len(posts),
+        'duplicate_title_count':len(duplicate_report),
+        'posts':posts
+    }
+    OUT.parent.mkdir(parents=True,exist_ok=True)
+    OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding='utf-8')
+
+    duplicate_out=OUT.with_name('duplicate_titles.json')
+    duplicate_out.write_text(json.dumps({
+        'generated_at':payload['generated_at'],
+        'count':len(duplicate_report),
+        'duplicates':duplicate_report
+    },ensure_ascii=False,indent=2),encoding='utf-8')
+
+    print(json.dumps({
+        'source_counts':payload['source_counts'],
+        'canonical_count':len(posts),
+        'duplicate_title_count':len(duplicate_report)
+    }))
 
 if __name__=='__main__': main()
