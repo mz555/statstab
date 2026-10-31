@@ -185,6 +185,16 @@ def mastodon():
             created=o.get('created_at')
             if created: oldest=min(oldest,dt(created)) if oldest else dt(created)
             h=HTML(); h.feed(o.get('content','')); text,links=h.result()
+            if str(o.get('id')) == '111722244321480951':
+                print(json.dumps({
+                    'mastodon_debug_id': o.get('id'),
+                    'created_at': created,
+                    'parsed_text': text,
+                    'statstab_anywhere': bool(STAT.search(text)),
+                    'statstab_first80': bool(STAT.search(text[:80])),
+                    'detected_number': number(text),
+                    'tags': [t.get('name','') for t in o.get('tags',[]) or [] if t.get('name')]
+                }, ensure_ascii=False))
             if not created or not STAT.search(text[:80]): continue
             xt=[t.get('name','') for t in o.get('tags',[]) or [] if t.get('name')]
             u=o.get('url') or o.get('uri') or ''
